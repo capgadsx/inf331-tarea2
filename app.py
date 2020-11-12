@@ -13,6 +13,15 @@ def setup_log(args):
     else:
         log.setLevel(logging.INFO)
 
+def restricted_confidence(x):
+    try:
+        x = float(x)
+    except ValueError:
+        raise argparse.ArgumentTypeError('{} is not a valid float'.format(x))
+    if x < 90 or x > 100:
+        raise argparse.ArgumentTypeError('{} is not in the range of [90, 100]'.format(x))
+    return x
+
 def setup_args():
     description_str = """
     Compares the text of two images using AWS Rekognition\n\n
@@ -25,6 +34,7 @@ def setup_args():
     parser.add_argument('-b', '--bucket', type=str, help='bucket to store the images for Rekognition', required=True)
     parser.add_argument('-i', '--awsid', type=str, help='AWS secret key id', required=True)
     parser.add_argument('-k', '--awskey', type=str, help='AWS secret access key', required=True)
+    parser.add_argument('-co', '--confidence', type=restricted_confidence, help='confidence for detected words', required=True)
     parser.add_argument('-v', '--debug', action='store_true', help='enable debug logging',)
     return parser.parse_args()
 
@@ -58,7 +68,8 @@ def search_text(args):
     log.debug('Rekognition response: {}'.format(control_res))
     control_set = set()
     for detection in control_res['TextDetections']:
-        control_set.add(detection['DetectedText'])
+        if detection['Confidence'] >= args.confidence:
+            control_set.add(detection['DetectedText'])
     log.info('Detected words from control image: {}'.format(control_set))
     log.info('Detecting text from test image')
     s3obj = {'S3Object': {'Bucket': args.bucket, 'Name': 'test_image'}}
@@ -66,7 +77,8 @@ def search_text(args):
     log.debug('Rekognition response: {}'.format(test_res))
     test_set = set()
     for detection in test_res['TextDetections']:
-        test_set.add(detection['DetectedText'])
+        if detection['Confidence'] >= args.confidence:
+            test_set.add(detection['DetectedText'])
     log.info('Detected words from test image: {}'.format(test_set))
     return control_set, test_set
 
@@ -78,7 +90,7 @@ if __name__ == "__main__":
     try:
         upload_images(args)
         control, test = search_text(args)
-        if control == test:
+        if control and test and control == test:
             log.info('Final Result: TRUE')
         else:
             log.info('Final Result: FALSE')
