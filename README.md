@@ -45,10 +45,10 @@ optional arguments:
   -v, --debug           enable debug logging
 
 $ python app.py -c ~/Descargas/control_image.png -t ~/Descargas/test_image.png -b bucket-inf-331... -i AKIA... -k bTc... --confidence 97
-12-Nov-20 02:53:13 - inf331-tarea3 - INFO - Started with args: Namespace(awsid='AKIA...', awskey='bTc...', bucket='bucket-inf-331...', confidence=97.0, control='/home/cponce/Descargas/control_image.png', debug=False, test='/home/cponce/Descargas/control_image.png')
+12-Nov-20 02:53:13 - inf331-tarea3 - INFO - Started with args: Namespace(awsid='AKIA...', awskey='bTc...', bucket='bucket-inf-331...', confidence=97.0, control='/home/cponce/Descargas/control_image.png', debug=False, test='/home/cponce/Descargas/test_image.png')
 12-Nov-20 02:53:13 - inf331-tarea3 - INFO - Creating S3 client, using bucket bucket-inf-331...
 12-Nov-20 02:53:13 - inf331-tarea3 - INFO - Uploading control image: /home/cponce/Descargas/control_image.png
-12-Nov-20 02:53:17 - inf331-tarea3 - INFO - Uploading test image: /home/cponce/Descargas/control_image.png
+12-Nov-20 02:53:17 - inf331-tarea3 - INFO - Uploading test image: /home/cponce/Descargas/test_image.png
 12-Nov-20 02:53:20 - inf331-tarea3 - INFO - Done uploading images
 12-Nov-20 02:53:20 - inf331-tarea3 - INFO - Creating Rekognition client
 12-Nov-20 02:53:20 - inf331-tarea3 - INFO - Detecting text from control image
