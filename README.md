@@ -1,6 +1,10 @@
 # INF331 - Tarea 2
 
-Este aplicativo busca comparar el texto contenido en dos imagenes, utilizando los servicios de AWS: Rekognition y S3
+Este aplicativo busca comparar el texto contenido en dos imagenes, utilizando los siguientes servicios de [AWS](https://aws.amazon.com/es/)
+
+* [Rekognition](https://aws.amazon.com/es/rekognition/)
+* [S3](https://aws.amazon.com/es/s3/)
+* [IAM](https://aws.amazon.com/es/iam/)
 
 ## Dependencias
 

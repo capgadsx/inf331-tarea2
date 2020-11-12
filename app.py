@@ -7,7 +7,7 @@ global log
 def setup_log(args):
     global log
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
-    log = logging.getLogger('inf331-tarea3')
+    log = logging.getLogger('inf331-tarea2')
     if args.debug:
         log.setLevel(logging.DEBUG)
     else:
