@@ -56,6 +56,19 @@ def search_text(args):
     s3obj = {'S3Object': {'Bucket': args.bucket, 'Name': 'control_image'}}
     control_res = client.detect_text(Image=s3obj)
     log.debug('Rekognition response: {}'.format(control_res))
+    control_set = set()
+    for detection in control_res['TextDetections']:
+        control_set.add(detection['DetectedText'])
+    log.info('Detected words from control image: {}'.format(control_set))
+    log.info('Detecting text from test image')
+    s3obj = {'S3Object': {'Bucket': args.bucket, 'Name': 'test_image'}}
+    test_res = client.detect_text(Image=s3obj)
+    log.debug('Rekognition response: {}'.format(test_res))
+    test_set = set()
+    for detection in test_res['TextDetections']:
+        test_set.add(detection['DetectedText'])
+    log.info('Detected words from test image: {}'.format(test_set))
+    return control_set, test_set
 
 if __name__ == "__main__":
     global log
@@ -64,7 +77,11 @@ if __name__ == "__main__":
     log.info('Started with args: {}'.format(args))
     try:
         upload_images(args)
-        search_text(args)
+        control, test = search_text(args)
+        if control == test:
+            log.info('Final Result: TRUE')
+        else:
+            log.info('Final Result: FALSE')
     except Exception as excep:
         log.error('EXCEPTION: {}'.format(excep))
     log.info('Program done')
