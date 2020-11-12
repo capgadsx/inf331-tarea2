@@ -4,11 +4,14 @@ import argparse
 
 global log
 
-def setup_log():
+def setup_log(args):
     global log
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
     log = logging.getLogger('inf331-tarea3')
-    log.setLevel(logging.INFO)
+    if args.debug:
+        log.setLevel(logging.DEBUG)
+    else:
+        log.setLevel(logging.INFO)
 
 def setup_args():
     description_str = """
@@ -22,6 +25,7 @@ def setup_args():
     parser.add_argument('-b', '--bucket', type=str, help='bucket to store the images for Rekognition', required=True)
     parser.add_argument('-i', '--awsid', type=str, help='AWS secret key id', required=True)
     parser.add_argument('-k', '--awskey', type=str, help='AWS secret access key', required=True)
+    parser.add_argument('-v', '--debug', action='store_true', help='enable debug logging',)
     return parser.parse_args()
 
 def upload_images(args):
@@ -40,14 +44,27 @@ def upload_images(args):
         client.upload_fileobj(fp, args.bucket, 'test_image')
     log.info('Done uploading images')
 
+def search_text(args):
+    global log
+    log.info('Creating Rekognition client')
+    client = boto3.client(
+        'rekognition',
+        aws_access_key_id=args.awsid,
+        aws_secret_access_key=args.awskey
+    )
+    log.info('Detecting text from control image')
+    s3obj = {'S3Object': {'Bucket': args.bucket, 'Name': 'control_image'}}
+    control_res = client.detect_text(Image=s3obj)
+    log.debug('Rekognition response: {}'.format(control_res))
 
 if __name__ == "__main__":
     global log
     args = setup_args()
-    setup_log()
+    setup_log(args)
     log.info('Started with args: {}'.format(args))
     try:
         upload_images(args)
+        search_text(args)
     except Exception as excep:
         log.error('EXCEPTION: {}'.format(excep))
     log.info('Program done')
