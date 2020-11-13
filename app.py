@@ -32,20 +32,24 @@ def setup_args():
     parser.add_argument('-c', '--control', type=str, help='path of the control image', required=True)
     parser.add_argument('-t', '--test', type=str, help='path of the test image', required=True)
     parser.add_argument('-b', '--bucket', type=str, help='bucket to store the images for Rekognition', required=True)
-    parser.add_argument('-i', '--awsid', type=str, help='AWS secret key id', required=True)
-    parser.add_argument('-k', '--awskey', type=str, help='AWS secret access key', required=True)
+    parser.add_argument('-i', '--awsid', type=str, help='AWS secret key id')
+    parser.add_argument('-k', '--awskey', type=str, help='AWS secret access key')
     parser.add_argument('-co', '--confidence', type=restricted_confidence, help='confidence for detected words', required=True)
     parser.add_argument('-v', '--debug', action='store_true', help='enable debug logging',)
+    parser.add_argument('-f', '--fromfile', action='store_true', help='get AWS credentials from ~/.aws/credentials',)
     return parser.parse_args()
 
 def upload_images(args):
     global log
     log.info('Creating S3 client, using bucket {}'.format(args.bucket))
-    client = boto3.client(
-        's3',
-        aws_access_key_id=args.awsid,
-        aws_secret_access_key=args.awskey
-    )
+    if args.fromfile:
+        client = boto3.client('s3')
+    else:
+        client = boto3.client(
+            's3',
+            aws_access_key_id=args.awsid,
+            aws_secret_access_key=args.awskey
+        )
     log.info('Uploading control image: {}'.format(args.control))
     with open(args.control, 'rb') as fp:
         client.upload_fileobj(fp, args.bucket, 'control_image')
@@ -57,11 +61,14 @@ def upload_images(args):
 def search_text(args):
     global log
     log.info('Creating Rekognition client')
-    client = boto3.client(
-        'rekognition',
-        aws_access_key_id=args.awsid,
-        aws_secret_access_key=args.awskey
-    )
+    if args.fromfile:
+        client = boto3.client('rekognition')
+    else:
+        client = boto3.client(
+            'rekognition',
+            aws_access_key_id=args.awsid,
+            aws_secret_access_key=args.awskey
+        )
     log.info('Detecting text from control image')
     s3obj = {'S3Object': {'Bucket': args.bucket, 'Name': 'control_image'}}
     control_res = client.detect_text(Image=s3obj)
@@ -86,6 +93,9 @@ if __name__ == "__main__":
     global log
     args = setup_args()
     setup_log(args)
+    if not ((args.awsid and args.awskey) or args.fromfile):
+        log.error('Missing AWS credentials')
+        quit()
     log.info('Started with args: {}'.format(args))
     try:
         upload_images(args)
