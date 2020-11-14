@@ -1,4 +1,5 @@
 import boto3
+import string
 import logging
 import argparse
 
@@ -60,6 +61,7 @@ def upload_images(args):
 
 def search_text(args):
     global log
+    remove = dict.fromkeys(map(ord, '\n ' + string.punctuation))
     log.info('Creating Rekognition client')
     if args.fromfile:
         client = boto3.client('rekognition')
@@ -75,8 +77,8 @@ def search_text(args):
     log.debug('Rekognition response: {}'.format(control_res))
     control_set = set()
     for detection in control_res['TextDetections']:
-        if detection['Confidence'] >= args.confidence:
-            control_set.add(detection['DetectedText'])
+        if detection['Confidence'] >= args.confidence and len(detection['DetectedText'].split()) == 1:
+            control_set.add(detection['DetectedText'].lower().translate(remove))
     log.info('Detected words from control image: {}'.format(control_set))
     log.info('Detecting text from test image')
     s3obj = {'S3Object': {'Bucket': args.bucket, 'Name': 'test_image'}}
@@ -84,8 +86,8 @@ def search_text(args):
     log.debug('Rekognition response: {}'.format(test_res))
     test_set = set()
     for detection in test_res['TextDetections']:
-        if detection['Confidence'] >= args.confidence:
-            test_set.add(detection['DetectedText'])
+        if detection['Confidence'] >= args.confidence and len(detection['DetectedText'].split()) == 1:
+            test_set.add(detection['DetectedText'].lower().translate(remove))
     log.info('Detected words from test image: {}'.format(test_set))
     return control_set, test_set
 
@@ -100,7 +102,7 @@ if __name__ == "__main__":
     try:
         upload_images(args)
         control, test = search_text(args)
-        if control and test and control == test:
+        if control and test and control.issubset(test):
             log.info('Final Result: TRUE')
         else:
             log.info('Final Result: FALSE')
